@@ -211,22 +211,10 @@
         .post-it.orange {
             background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
         }
-
-        /* Loading indicator */
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 18px;
-            color: #666;
-        }
     </style>
 </head>
 <body>
-    <div id="app">
-        <div class="loading">Carregando...</div>
-    </div>
+    <div id="app"></div>
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -238,8 +226,8 @@
         const COLORS = ['yellow', 'pink', 'blue', 'green', 'purple', 'orange'];
         const STORAGE_KEY = 'matriz-impacto-postits';
 
-        // URL da imagem hospedada (use imgur, imgbb, ou GitHub raw)
-        const BACKGROUND_IMAGE = 'https://i.ibb.co/xYQZvWp/Frame-1000003740-1.png';
+        // A imagem deve estar na mesma pasta que o index.html
+        const BACKGROUND_IMAGE = './matriz-background.png';
 
         function PostIt({ id, x, y, text, color, onUpdate, onDelete }) {
             const [isDragging, setIsDragging] = useState(false);
@@ -353,7 +341,6 @@
 
         function App() {
             const nextId = useRef(0);
-            const [imageLoaded, setImageLoaded] = useState(false);
 
             const [postIts, setPostIts] = useState(() => {
                 const saved = localStorage.getItem(STORAGE_KEY);
@@ -415,8 +402,6 @@
                         id="background-image" 
                         src={BACKGROUND_IMAGE}
                         alt="Matriz Impacto/Valor"
-                        onLoad={() => setImageLoaded(true)}
-                        onError={() => console.error('Erro ao carregar imagem')}
                     />
                     
                     {postIts.map(postIt => (
@@ -441,9 +426,7 @@
             );
         }
 
-        // Renderizar a aplicação
-        const root = document.getElementById('app');
-        ReactDOM.render(<App />, root);
+        ReactDOM.render(<App />, document.getElementById('app'));
     </script>
 </body>
 </html>
