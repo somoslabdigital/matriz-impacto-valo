@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Matriz Impacto/Valor Interativa com Post-its">
+    <title>Matriz Impacto/Valor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+        }
+
+        #app {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #background-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .add-button {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 36px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .add-button:hover {
+            background: #45a049;
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+
+        .add-button:active {
+            transform: scale(0.95);
+        }
+
+        .clear-button {
+            position: absolute;
+            bottom: 30px;
+            left: 100px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            background: #f44336;
+            border: none;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .clear-button:hover {
+            background: #da190b;
+            transform: scale(1.05);
+        }
+
+        .clear-button:active {
+            transform: scale(0.95);
+        }
+
+        .post-it {
+            position: absolute;
+            width: 180px;
+            min-height: 180px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            cursor: move;
+            transition: box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .post-it:hover {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        .post-it.dragging {
+            opacity: 0.8;
+            cursor: grabbing;
+            z-index: 1000;
+        }
+
+        .post-it-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .delete-button {
+            background: rgba(0,0,0,0.15);
+            border: none;
+            color: rgba(0,0,0,0.6);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .delete-button:hover {
+            background: rgba(0,0,0,0.3);
+            color: rgba(0,0,0,0.8);
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .color-option {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .color-option:hover {
+            transform: scale(1.2);
+            border-color: rgba(0,0,0,0.3);
+        }
+
+        .color-option.selected {
+            border-color: rgba(0,0,0,0.5);
+            transform: scale(1.15);
+        }
+
+        .post-it-content {
+            flex: 1;
+            background: transparent;
+            border: none;
+            resize: none;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: rgba(0,0,0,0.8);
+            outline: none;
+            width: 100%;
+            min-height: 100px;
+        }
+
+        .post-it-content::placeholder {
+            color: rgba(0,0,0,0.3);
+        }
+
+        .post-it.yellow {
+            background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%);
+        }
+
+        .post-it.pink {
+            background: linear-gradient(135deg, #fce7f3 0%, #f9a8d4 100%);
+        }
+
+        .post-it.blue {
+            background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%);
+        }
+
+        .post-it.green {
+            background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%);
+        }
+
+        .post-it.purple {
+            background: linear-gradient(135deg, #e9d5ff 0%, #c084fc 100%);
+        }
+
+        .post-it.orange {
+            background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+        }
+
+        /* Loading indicator */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading">Carregando...</div>
+    </div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        const COLORS = ['yellow', 'pink', 'blue', 'green', 'purple', 'orange'];
+        const STORAGE_KEY = 'matriz-impacto-postits';
+
+        // URL da imagem hospedada (use imgur, imgbb, ou GitHub raw)
+        const BACKGROUND_IMAGE = 'https://i.ibb.co/xYQZvWp/Frame-1000003740-1.png';
+
+        function PostIt({ id, x, y, text, color, onUpdate, onDelete }) {
+            const [isDragging, setIsDragging] = useState(false);
+            const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+            const [showColorPicker, setShowColorPicker] = useState(false);
+
+            const handleMouseDown = (e) => {
+                if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') {
+                    return;
+                }
+                e.preventDefault();
+                setIsDragging(true);
+                setDragOffset({
+                    x: e.clientX - x,
+                    y: e.clientY - y
+                });
+            };
+
+            useEffect(() => {
+                if (!isDragging) return;
+
+                const handleMouseMove = (e) => {
+                    e.preventDefault();
+                    const newX = e.clientX - dragOffset.x;
+                    const newY = e.clientY - dragOffset.y;
+                    onUpdate(id, { x: newX, y: newY });
+                };
+
+                const handleMouseUp = () => {
+                    setIsDragging(false);
+                };
+
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+
+                return () => {
+                    document.removeEventListener('mousemove', handleMouseMove);
+                    document.removeEventListener('mouseup', handleMouseUp);
+                };
+            }, [isDragging, dragOffset, id, onUpdate]);
+
+            return (
+                <div
+                    className={`post-it ${color} ${isDragging ? 'dragging' : ''}`}
+                    style={{ left: x, top: y }}
+                    onMouseDown={handleMouseDown}
+                >
+                    <div className="post-it-header">
+                        <div 
+                            style={{ cursor: 'pointer', padding: '2px' }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowColorPicker(!showColorPicker);
+                            }}
+                        >
+                            {showColorPicker && (
+                                <div className="color-picker" onClick={(e) => e.stopPropagation()}>
+                                    {COLORS.map(c => (
+                                        <div
+                                            key={c}
+                                            className={`color-option ${c} ${c === color ? 'selected' : ''}`}
+                                            style={{ background: c === 'yellow' ? '#fde047' : 
+                                                               c === 'pink' ? '#f9a8d4' : 
+                                                               c === 'blue' ? '#93c5fd' : 
+                                                               c === 'green' ? '#6ee7b7' : 
+                                                               c === 'purple' ? '#c084fc' : '#fdba74' }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onUpdate(id, { color: c });
+                                                setShowColorPicker(false);
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                            {!showColorPicker && (
+                                <div style={{ 
+                                    width: '20px', 
+                                    height: '20px', 
+                                    borderRadius: '50%',
+                                    background: 'rgba(0,0,0,0.1)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '12px'
+                                }}>
+                                    🎨
+                                </div>
+                            )}
+                        </div>
+                        <button 
+                            className="delete-button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(id);
+                            }}
+                        >
+                            ×
+                        </button>
+                    </div>
+                    <textarea
+                        className="post-it-content"
+                        value={text}
+                        onChange={(e) => onUpdate(id, { text: e.target.value })}
+                        onClick={(e) => e.stopPropagation()}
+                        placeholder="Digite aqui..."
+                    />
+                </div>
+            );
+        }
+
+        function App() {
+            const nextId = useRef(0);
+            const [imageLoaded, setImageLoaded] = useState(false);
+
+            const [postIts, setPostIts] = useState(() => {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    try {
+                        const data = JSON.parse(saved);
+                        nextId.current = data.nextId || 0;
+                        return data.postIts || [];
+                    } catch (e) {
+                        return [];
+                    }
+                }
+                return [];
+            });
+
+            useEffect(() => {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    postIts: postIts,
+                    nextId: nextId.current
+                }));
+            }, [postIts]);
+
+            const addPostIt = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const newPostIt = {
+                    id: nextId.current++,
+                    x: 100 + (postIts.length * 30) % 300,
+                    y: 100 + (postIts.length * 30) % 300,
+                    text: '',
+                    color: COLORS[postIts.length % COLORS.length]
+                };
+                setPostIts([...postIts, newPostIt]);
+            };
+
+            const updatePostIt = (id, updates) => {
+                setPostIts(postIts.map(p => 
+                    p.id === id ? { ...p, ...updates } : p
+                ));
+            };
+
+            const deletePostIt = (id) => {
+                setPostIts(postIts.filter(p => p.id !== id));
+            };
+
+            const clearAll = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (confirm('Deseja limpar todos os post-its?')) {
+                    setPostIts([]);
+                    nextId.current = 0;
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            };
+
+            return (
+                <div id="app">
+                    <img 
+                        id="background-image" 
+                        src={BACKGROUND_IMAGE}
+                        alt="Matriz Impacto/Valor"
+                        onLoad={() => setImageLoaded(true)}
+                        onError={() => console.error('Erro ao carregar imagem')}
+                    />
+                    
+                    {postIts.map(postIt => (
+                        <PostIt
+                            key={postIt.id}
+                            {...postIt}
+                            onUpdate={updatePostIt}
+                            onDelete={deletePostIt}
+                        />
+                    ))}
+
+                    <button className="add-button" onClick={addPostIt} title="Adicionar Post-it">
+                        +
+                    </button>
+
+                    {postIts.length > 0 && (
+                        <button className="clear-button" onClick={clearAll} title="Limpar Todos">
+                            Limpar Tudo
+                        </button>
+                    )}
+                </div>
+            );
+        }
+
+        // Renderizar a aplicação
+        const root = document.getElementById('app');
+        ReactDOM.render(<App />, root);
+    </script>
+</body>
+</html>
